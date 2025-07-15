@@ -1,5 +1,6 @@
 import Foundation
 import FirebaseFirestore
+import FirebaseStorage
 import FirebaseAuth
 import Combine
 
@@ -213,9 +214,11 @@ class ChatStore: ObservableObject {
                     "unreadCount": 0
                 ])
                 
-            } catch {
-                print("Error marking messages as read: \(error)")
+                    } catch {
+            DispatchQueue.main.async {
+                self.errorMessage = "Failed to mark messages as read"
             }
+        }
         }
     }
     

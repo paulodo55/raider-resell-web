@@ -271,7 +271,9 @@ class ItemStore: ObservableObject {
                 }
             }
         } catch {
-            print("Error incrementing views: \(error)")
+            await MainActor.run {
+                errorMessage = "Failed to update view count"
+            }
         }
     }
     
@@ -291,7 +293,9 @@ class ItemStore: ObservableObject {
                 }
             }
         } catch {
-            print("Error toggling like: \(error)")
+            await MainActor.run {
+                errorMessage = "Failed to update like status"
+            }
         }
     }
     

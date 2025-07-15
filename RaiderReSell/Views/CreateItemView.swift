@@ -19,6 +19,7 @@ struct CreateItemView: View {
     
     // Image handling
     @State private var selectedImages: [UIImage] = []
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var showingImagePicker = false
     @State private var showingCamera = false
     @State private var showingPhotoPicker = false
@@ -76,10 +77,9 @@ struct CreateItemView: View {
             .navigationBarHidden(true)
             .background(TexasTechTheme.lightGray.opacity(0.3))
         }
-        .sheet(isPresented: $showingPhotoPicker) {
-            PhotosPicker(selection: .constant([]), matching: .images) { _ in
-                // Handle photo selection
-            }
+        .photosPicker(isPresented: $showingPhotoPicker, selection: $selectedPhotoItems, matching: .images)
+        .onChange(of: selectedPhotoItems) { _ in
+            loadSelectedPhotos()
         }
         .sheet(isPresented: $showingCamera) {
             CameraView { image in
@@ -509,6 +509,22 @@ struct CreateItemView: View {
             
             await MainActor.run {
                 description = optimized
+            }
+        }
+    }
+    
+    private func loadSelectedPhotos() {
+        Task {
+            for item in selectedPhotoItems {
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    await MainActor.run {
+                        selectedImages.append(image)
+                    }
+                }
+            }
+            await MainActor.run {
+                selectedPhotoItems.removeAll()
             }
         }
     }

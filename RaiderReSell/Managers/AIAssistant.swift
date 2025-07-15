@@ -31,8 +31,13 @@ class AIAssistant: ObservableObject {
     
     init() {
         // Initialize Gemini API - You'll need to add your API key
-        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "GEMINI_API_KEY") as? String else {
-            fatalError("Add your Gemini API key to Info.plist")
+        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "GEMINI_API_KEY") as? String,
+              !apiKey.isEmpty else {
+            // Use empty models as fallback - features will be disabled
+            self.model = GenerativeModel(name: "gemini-pro", apiKey: "")
+            self.chatModel = GenerativeModel(name: "gemini-pro", apiKey: "")
+            self.errorMessage = "Gemini API key not configured. AI features are disabled."
+            return
         }
         
         self.model = GenerativeModel(name: "gemini-pro", apiKey: apiKey)
@@ -302,7 +307,9 @@ class AIAssistant: ObservableObject {
                     .filter { !$0.isEmpty }
             }
         } catch {
-            print("Error finding similar items: \(error)")
+            await MainActor.run {
+                errorMessage = "Failed to find similar items"
+            }
         }
         
         return []

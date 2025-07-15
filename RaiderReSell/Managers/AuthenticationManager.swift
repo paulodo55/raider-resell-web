@@ -26,7 +26,9 @@ class AuthenticationManager: ObservableObject {
         authStateListener = Auth.auth().addStateDidChangeListener { [weak self] auth, user in
             DispatchQueue.main.async {
                 if let user = user {
-                    self?.fetchUserData(uid: user.uid)
+                    Task {
+                        await self?.fetchUserData(uid: user.uid)
+                    }
                 } else {
                     self?.currentUser = nil
                     self?.isAuthenticated = false
@@ -192,7 +194,7 @@ class AuthenticationManager: ObservableObject {
                 "lastActive": FieldValue.serverTimestamp()
             ])
         } catch {
-            print("Error updating last active: \(error)")
+            // Silently fail - this is a background operation
         }
     }
     
@@ -209,7 +211,7 @@ class AuthenticationManager: ObservableObject {
                 currentUser?.itemsSold += 1
             }
         } catch {
-            print("Error incrementing items sold: \(error)")
+            // Silently fail - this is a background operation
         }
     }
     
@@ -226,7 +228,7 @@ class AuthenticationManager: ObservableObject {
                 currentUser?.itemsBought += 1
             }
         } catch {
-            print("Error incrementing items bought: \(error)")
+            // Silently fail - this is a background operation
         }
     }
 } 

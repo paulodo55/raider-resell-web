@@ -36,7 +36,7 @@ struct ContentView: View {
                     Image(systemName: selectedTab == 1 ? "message.fill" : "message")
                     Text("Chats")
                 }
-                .badge(chatStore.getUnreadMessagesCount() > 0 ? chatStore.getUnreadMessagesCount() : nil)
+                .badge(chatStore.getUnreadMessagesCount() > 0 ? chatStore.getUnreadMessagesCount() : 0)
                 .tag(1)
             
             // Sell Tab (Camera/Add Item)
