@@ -7,7 +7,7 @@ let package = Package(
         .iOS(.v16)
     ],
     products: [
-        .library(
+        .executable(
             name: "RaiderReSell",
             targets: ["RaiderReSell"]),
     ],
@@ -19,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/MessageKit/MessageKit.git", from: "4.2.0")
     ],
     targets: [
-        .target(
+        .executableTarget(
             name: "RaiderReSell",
             dependencies: [
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
@@ -30,9 +30,11 @@ let package = Package(
                 "Alamofire",
                 .product(name: "SDWebImageSwiftUI", package: "SDWebImageSwiftUI"),
                 "MessageKit"
-            ]),
+            ],
+            path: "RaiderReSell"),
         .testTarget(
             name: "RaiderReSeillTests",
-            dependencies: ["RaiderReSell"]),
+            dependencies: ["RaiderReSell"],
+            path: "Tests"),
     ]
 ) 
