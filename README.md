@@ -99,7 +99,7 @@ Raider ReSell is a modern, user-friendly marketplace app designed specifically f
      ```
 
 5. **Build and Run**
-   - Open `RaiderReSell.xcodeproj` in Xcode
+   - Open `Package.swift` in Xcode (or open the folder directly in Xcode)
    - Select your target device or simulator
    - Press Cmd+R to build and run
 
