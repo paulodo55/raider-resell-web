@@ -8,308 +8,222 @@ struct ProfileView: View {
     @State private var showingEditProfile = false
     @State private var showingSettings = false
     @State private var showingMyListings = false
+    @State private var showingLogoutAlert = false
     
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 24) {
-                    // Profile Header
-                    profileHeaderSection
-                    
-                    // Stats Section
-                    statsSection
-                    
-                    // Quick Actions
-                    quickActionsSection
-                    
-                    // Menu Items
-                    menuItemsSection
-                    
-                    // Sign Out Button
-                    signOutSection
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 100)
-            }
-            .background(TexasTechTheme.lightGray.opacity(0.3))
-            .navigationBarHidden(true)
-            .sheet(isPresented: $showingEditProfile) {
-                EditProfileView()
-            }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-            }
-            .sheet(isPresented: $showingMyListings) {
-                MyListingsView()
-            }
-        }
-    }
-    
-    // MARK: - Profile Header Section
-    private var profileHeaderSection: some View {
-        VStack(spacing: 20) {
-            HStack {
-                Text("Profile")
-                    .font(TexasTechTypography.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(TexasTechTheme.black)
-                
-                Spacer()
-                
-                Button(action: { showingSettings = true }) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title2)
-                        .foregroundColor(TexasTechTheme.primaryRed)
-                }
-            }
-            
-            VStack(spacing: 16) {
-                // Profile Picture
-                ZStack {
-                    Circle()
-                        .fill(TexasTechTheme.primaryGradient)
-                        .frame(width: 100, height: 100)
-                    
-                    if let profileImageURL = authManager.currentUser?.profileImageURL {
-                        AsyncImage(url: URL(string: profileImageURL)) { image in
+                VStack(spacing: 20) {
+                    // Header Section
+                    VStack(spacing: 16) {
+                        // Profile Image
+                        AsyncImage(url: URL(string: authManager.currentUser?.profileImageURL ?? "")) { image in
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                         } placeholder: {
-                            ProgressView()
+                            Circle()
+                                .fill(TexasTechTheme.lightGray)
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(TexasTechTheme.mediumGray)
+                                )
                         }
-                        .frame(width: 100, height: 100)
+                        .frame(width: 120, height: 120)
                         .clipShape(Circle())
-                    } else {
-                        Text(authManager.currentUser?.firstName.prefix(1) ?? "R")
-                            .font(.system(size: 36, weight: .bold))
-                            .foregroundColor(TexasTechTheme.white)
-                    }
-                    
-                    // Edit button
-                    Button(action: { showingEditProfile = true }) {
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(TexasTechTheme.white)
-                            .padding(8)
-                            .background(TexasTechTheme.primaryRed)
-                            .clipShape(Circle())
-                    }
-                    .offset(x: 35, y: 35)
-                }
-                
-                // User Info
-                VStack(spacing: 8) {
-                    Text(authManager.currentUser?.fullName ?? "Raider")
-                        .font(TexasTechTypography.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(TexasTechTheme.black)
-                    
-                    VStack(spacing: 4) {
-                        Text(authManager.currentUser?.email ?? "")
-                            .font(TexasTechTypography.subheadline)
-                            .foregroundColor(TexasTechTheme.mediumGray)
                         
+                        // User Info
+                        VStack(spacing: 8) {
+                            Text(authManager.currentUser?.fullName ?? "Unknown User")
+                                .font(TexasTechTypography.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(TexasTechTheme.black)
+                            
+                            Text(authManager.currentUser?.email ?? "")
+                                .font(TexasTechTypography.subheadline)
+                                .foregroundColor(TexasTechTheme.mediumGray)
+                            
+                            Text("Class of \(authManager.currentUser?.graduationYear ?? 2024)")
+                                .font(TexasTechTypography.caption1)
+                                .foregroundColor(TexasTechTheme.primaryRed)
+                        }
+                        
+                        // Stats
                         HStack(spacing: 16) {
-                            Label {
-                                Text("Class of \(authManager.currentUser?.graduationYear ?? 2024)")
-                                    .font(TexasTechTypography.caption1)
-                                    .foregroundColor(TexasTechTheme.mediumGray)
-                            } icon: {
-                                Image(systemName: "graduationcap.fill")
-                                    .foregroundColor(TexasTechTheme.primaryRed)
-                                    .font(.caption)
+                            StatCard(
+                                title: "Items\nSold",
+                                value: "\(authManager.currentUser?.itemsSold ?? 0)",
+                                icon: "bag.fill",
+                                color: TexasTechTheme.primaryRed
+                            )
+                            
+                            StatCard(
+                                title: "Items\nBought",
+                                value: "\(authManager.currentUser?.itemsBought ?? 0)",
+                                icon: "cart.fill",
+                                color: TexasTechTheme.primaryRed
+                            )
+                            
+                            StatCard(
+                                title: "Rating",
+                                value: String(format: "%.1f", authManager.currentUser?.rating ?? 0.0),
+                                icon: "star.fill",
+                                color: TexasTechTheme.gold
+                            )
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.top, 20)
+                    
+                    // Action Buttons
+                    VStack(spacing: 12) {
+                        HStack(spacing: 12) {
+                            ActionButton(
+                                title: "Edit Profile",
+                                subtitle: "Update your info",
+                                icon: "person.crop.circle",
+                                color: TexasTechTheme.primaryRed
+                            ) {
+                                showingEditProfile = true
                             }
                             
-                            if let dormitory = authManager.currentUser?.dormitory {
-                                Label {
-                                    Text(dormitory)
-                                        .font(TexasTechTypography.caption1)
-                                        .foregroundColor(TexasTechTheme.mediumGray)
-                                } icon: {
-                                    Image(systemName: "house.fill")
-                                        .foregroundColor(TexasTechTheme.primaryRed)
-                                        .font(.caption)
-                                }
+                            ActionButton(
+                                title: "My Listings",
+                                subtitle: "View your items",
+                                icon: "list.bullet.rectangle",
+                                color: TexasTechTheme.primaryRed
+                            ) {
+                                showingMyListings = true
                             }
                         }
+                        
+                        Button(action: shareProfile) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.title3)
+                                    .foregroundColor(TexasTechTheme.primaryRed)
+                                
+                                Text("Share Profile")
+                                    .font(TexasTechTypography.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(TexasTechTheme.black)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(TexasTechTheme.mediumGray)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 16)
+                            .texasTechCard()
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
+                    .padding(.horizontal)
                     
-                    // Rating
-                    HStack(spacing: 4) {
-                        ForEach(0..<5) { index in
-                            Image(systemName: index < Int(authManager.currentUser?.rating ?? 0) ? "star.fill" : "star")
-                                .foregroundColor(TexasTechTheme.gold)
-                                .font(.caption)
+                    // Menu Options
+                    VStack(spacing: 0) {
+                        MenuRowItem(
+                            title: "Settings",
+                            subtitle: "Notifications, privacy, and more",
+                            icon: "gear"
+                        ) {
+                            showingSettings = true
                         }
                         
-                        Text(authManager.currentUser?.displayRating ?? "No ratings yet")
-                            .font(TexasTechTypography.caption1)
-                            .foregroundColor(TexasTechTheme.mediumGray)
-                    }
-                    .padding(.top, 4)
-                    
-                    // Verification Badge
-                    if authManager.currentUser?.isVerified == true {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(TexasTechTheme.success)
-                            Text("Verified Student")
-                                .font(TexasTechTypography.caption1)
-                                .foregroundColor(TexasTechTheme.success)
+                        Divider()
+                        
+                        MenuRowItem(
+                            title: "Help & Support",
+                            subtitle: "Get help with the app",
+                            icon: "questionmark.circle"
+                        ) {
+                            // Open help
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(TexasTechTheme.success.opacity(0.1))
-                        .cornerRadius(12)
+                        
+                        Divider()
+                        
+                        MenuRowItem(
+                            title: "About",
+                            subtitle: "App version and info",
+                            icon: "info.circle"
+                        ) {
+                            // Open about
+                        }
+                        
+                        Divider()
+                        
+                        Button(action: {
+                            showingLogoutAlert = true
+                        }) {
+                            HStack(spacing: 16) {
+                                Image(systemName: "arrow.right.square")
+                                    .font(.title3)
+                                    .foregroundColor(TexasTechTheme.error)
+                                    .frame(width: 24)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Log Out")
+                                        .font(TexasTechTypography.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(TexasTechTheme.error)
+                                    
+                                    Text("Sign out of your account")
+                                        .font(TexasTechTypography.caption1)
+                                        .foregroundColor(TexasTechTheme.mediumGray)
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
+                    .texasTechCard()
+                    .padding(.horizontal)
                 }
+                .padding(.bottom, 100)
             }
+            .navigationBarHidden(true)
+            .background(TexasTechTheme.lightGray.opacity(0.3))
         }
-        .padding()
-        .texasTechCard()
-    }
-    
-    // MARK: - Stats Section
-    private var statsSection: some View {
-        HStack(spacing: 16) {
-            StatCard(
-                title: "Items Sold",
-                value: "\(authManager.currentUser?.itemsSold ?? 0)",
-                icon: "cart.fill",
-                color: TexasTechTheme.success
-            )
-            
-            StatCard(
-                title: "Items Bought",
-                value: "\(authManager.currentUser?.itemsBought ?? 0)",
-                icon: "bag.fill",
-                color: TexasTechTheme.primaryRed
-            )
-            
-            StatCard(
-                title: "Active Listings",
-                value: "\(itemStore.userItems.count)",
-                icon: "tag.fill",
-                color: TexasTechTheme.gold
-            )
+        .sheet(isPresented: $showingEditProfile) {
+            EditProfileView()
         }
-    }
-    
-    // MARK: - Quick Actions Section
-    private var quickActionsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Quick Actions")
-                .font(TexasTechTypography.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(TexasTechTheme.black)
-            
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 12) {
-                ActionButton(
-                    title: "My Listings",
-                    subtitle: "\(itemStore.userItems.count) active",
-                    icon: "list.bullet.rectangle.portrait.fill",
-                    color: TexasTechTheme.primaryRed
-                ) {
-                    showingMyListings = true
-                }
-                
-                ActionButton(
-                    title: "Saved Items",
-                    subtitle: "View favorites",
-                    icon: "heart.fill",
-                    color: TexasTechTheme.gold
-                ) {
-                    // Handle saved items
-                }
-                
-                ActionButton(
-                    title: "Purchase History",
-                    subtitle: "Past orders",
-                    icon: "clock.arrow.circlepath",
-                    color: TexasTechTheme.success
-                ) {
-                    // Handle purchase history
-                }
-                
-                ActionButton(
-                    title: "Share Profile",
-                    subtitle: "Invite friends",
-                    icon: "square.and.arrow.up.fill",
-                    color: TexasTechTheme.mediumGray
-                ) {
-                    // Handle share profile
-                }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
+        .sheet(isPresented: $showingMyListings) {
+            MyListingsView()
+        }
+        .alert("Log Out", isPresented: $showingLogoutAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Log Out", role: .destructive) {
+                authManager.signOut()
             }
+        } message: {
+            Text("Are you sure you want to log out?")
         }
-        .padding()
-        .texasTechCard()
     }
     
-    // MARK: - Menu Items Section
-    private var menuItemsSection: some View {
-        VStack(spacing: 12) {
-            MenuRowItem(
-                title: "Edit Profile",
-                subtitle: "Update your information",
-                icon: "person.crop.circle.fill",
-                action: { showingEditProfile = true }
-            )
-            
-            MenuRowItem(
-                title: "Payment Methods",
-                subtitle: "Manage payment options",
-                icon: "creditcard.fill",
-                action: { /* Handle payment methods */ }
-            )
-            
-            MenuRowItem(
-                title: "Notifications",
-                subtitle: "Manage your preferences",
-                icon: "bell.fill",
-                action: { /* Handle notifications */ }
-            )
-            
-            MenuRowItem(
-                title: "Help & Support",
-                subtitle: "Get help with the app",
-                icon: "questionmark.circle.fill",
-                action: { /* Handle help */ }
-            )
-            
-            MenuRowItem(
-                title: "Privacy & Safety",
-                subtitle: "Security settings",
-                icon: "shield.fill",
-                action: { /* Handle privacy */ }
-            )
-            
-            MenuRowItem(
-                title: "About Raider ReSell",
-                subtitle: "App info and version",
-                icon: "info.circle.fill",
-                action: { /* Handle about */ }
-            )
-        }
-        .texasTechCard()
-    }
+    // MARK: - Profile Actions
     
-    // MARK: - Sign Out Section
-    private var signOutSection: some View {
-        Button("Sign Out") {
-            authManager.signOut()
+    private func shareProfile() {
+        let shareText = "Check out \(self.authManager.currentUser?.fullName ?? "this user")'s profile on Raider ReSell - Texas Tech's marketplace app!"
+        let shareURL = URL(string: "https://raiderresell.com/profile/\(self.authManager.currentUser?.id ?? "")")
+        
+        let activityVC = UIActivityViewController(
+            activityItems: [shareText, shareURL].compactMap { $0 },
+            applicationActivities: nil
+        )
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            window.rootViewController?.present(activityVC, animated: true)
         }
-        .font(TexasTechTypography.headline)
-        .fontWeight(.semibold)
-        .foregroundColor(TexasTechTheme.error)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(TexasTechTheme.white)
-        .cornerRadius(12)
-        .shadow(color: TexasTechTheme.cardShadow, radius: 2, x: 0, y: 1)
     }
 }
 

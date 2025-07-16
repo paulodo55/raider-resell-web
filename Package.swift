@@ -4,7 +4,8 @@ import PackageDescription
 let package = Package(
     name: "RaiderReSell",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v16),
+        .macOS(.v10_15)
     ],
     dependencies: [
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.0.0"),
