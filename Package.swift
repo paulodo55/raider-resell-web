@@ -6,12 +6,6 @@ let package = Package(
     platforms: [
         .iOS(.v16)
     ],
-    products: [
-        .library(
-            name: "RaiderReSell",
-            type: .dynamic,
-            targets: ["RaiderReSell"]),
-    ],
     dependencies: [
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.0.0"),
         .package(url: "https://github.com/google/generative-ai-swift", from: "0.4.0"),
@@ -30,7 +24,7 @@ let package = Package(
             ],
             path: "RaiderReSell"),
         .testTarget(
-            name: "RaiderReSeillTests",
+            name: "RaiderReSellTests",
             dependencies: ["RaiderReSell"],
             path: "Tests"),
     ]

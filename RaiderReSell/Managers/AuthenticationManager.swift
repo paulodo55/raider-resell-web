@@ -66,7 +66,7 @@ class AuthenticationManager: ObservableObject {
                 graduationYear: graduationYear
             )
             
-            try await db.collection("users").document(authResult.user.uid).setData(from: newUser)
+            try await db.collection(AppConstants.FirebaseCollections.users).document(authResult.user.uid).setData(from: newUser)
             
             await MainActor.run {
                 currentUser = newUser
@@ -115,7 +115,7 @@ class AuthenticationManager: ObservableObject {
     // MARK: - Fetch User Data
     private func fetchUserData(uid: String) async {
         do {
-            let document = try await db.collection("users").document(uid).getDocument()
+            let document = try await db.collection(AppConstants.FirebaseCollections.users).document(uid).getDocument()
             
             if let userData = try? document.data(as: User.self) {
                 await MainActor.run {
@@ -126,7 +126,7 @@ class AuthenticationManager: ObservableObject {
             }
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.networkError
                 isLoading = false
             }
         }
@@ -137,14 +137,14 @@ class AuthenticationManager: ObservableObject {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return }
         
         do {
-            try await db.collection("users").document(currentUserId).setData(from: updatedUser, merge: true)
+            try await db.collection(AppConstants.FirebaseCollections.users).document(currentUserId).setData(from: updatedUser, merge: true)
             
             await MainActor.run {
                 currentUser = updatedUser
             }
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.networkError
             }
         }
     }
@@ -171,12 +171,12 @@ class AuthenticationManager: ObservableObject {
     
     // MARK: - Validation
     private func isValidTexasTechEmail(_ email: String) -> Bool {
-        return email.lowercased().hasSuffix("@ttu.edu")
+        return email.lowercased().hasSuffix(AppConstants.Validation.texasTechEmailSuffix)
     }
     
     func validateStudentID(_ studentID: String) -> Bool {
         // Texas Tech student IDs are typically 8-9 digits
-        let regex = "^[0-9]{8,9}$"
+        let regex = "^[0-9]{\(AppConstants.Validation.studentIDMinLength),\(AppConstants.Validation.studentIDMaxLength)}$"
         return NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: studentID)
     }
     
@@ -190,7 +190,7 @@ class AuthenticationManager: ObservableObject {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return }
         
         do {
-            try await db.collection("users").document(currentUserId).updateData([
+            try await db.collection(AppConstants.FirebaseCollections.users).document(currentUserId).updateData([
                 "lastActive": FieldValue.serverTimestamp()
             ])
         } catch {
@@ -202,7 +202,7 @@ class AuthenticationManager: ObservableObject {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return }
         
         do {
-            try await db.collection("users").document(currentUserId).updateData([
+            try await db.collection(AppConstants.FirebaseCollections.users).document(currentUserId).updateData([
                 "itemsSold": FieldValue.increment(Int64(1))
             ])
             
@@ -219,7 +219,7 @@ class AuthenticationManager: ObservableObject {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return }
         
         do {
-            try await db.collection("users").document(currentUserId).updateData([
+            try await db.collection(AppConstants.FirebaseCollections.users).document(currentUserId).updateData([
                 "itemsBought": FieldValue.increment(Int64(1))
             ])
             

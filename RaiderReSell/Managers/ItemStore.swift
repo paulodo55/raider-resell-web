@@ -29,7 +29,7 @@ class ItemStore: ObservableObject {
     func fetchItems() {
         isLoading = true
         
-        db.collection("items")
+        db.collection(AppConstants.FirebaseCollections.items)
             .whereField("status", isEqualTo: ItemStatus.active.rawValue)
             .order(by: "createdAt", descending: true)
             .getDocuments { [weak self] snapshot, error in
@@ -37,7 +37,7 @@ class ItemStore: ObservableObject {
                     self?.isLoading = false
                     
                     if let error = error {
-                        self?.errorMessage = error.localizedDescription
+                        self?.errorMessage = AppConstants.ErrorMessages.networkError
                         return
                     }
                     
@@ -51,13 +51,13 @@ class ItemStore: ObservableObject {
     }
     
     func fetchUserItems(userID: String) {
-        db.collection("items")
+        db.collection(AppConstants.FirebaseCollections.items)
             .whereField("sellerID", isEqualTo: userID)
             .order(by: "createdAt", descending: true)
             .getDocuments { [weak self] snapshot, error in
                 DispatchQueue.main.async {
                     if let error = error {
-                        self?.errorMessage = error.localizedDescription
+                        self?.errorMessage = AppConstants.ErrorMessages.networkError
                         return
                     }
                     
@@ -70,13 +70,13 @@ class ItemStore: ObservableObject {
     
     // MARK: - Real-time Listener
     private func setupItemsListener() {
-        itemsListener = db.collection("items")
+        itemsListener = db.collection(AppConstants.FirebaseCollections.items)
             .whereField("status", isEqualTo: ItemStatus.active.rawValue)
             .order(by: "createdAt", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
                 DispatchQueue.main.async {
                     if let error = error {
-                        self?.errorMessage = error.localizedDescription
+                        self?.errorMessage = AppConstants.ErrorMessages.networkError
                         return
                     }
                     
@@ -99,7 +99,7 @@ class ItemStore: ObservableObject {
             newItem.imageURLs = imageURLs
             
             // Create item document
-            let documentRef = try await db.collection("items").addDocument(from: newItem)
+            let documentRef = try await db.collection(AppConstants.FirebaseCollections.items).addDocument(from: newItem)
             newItem.id = documentRef.documentID
             
             await MainActor.run {
@@ -111,7 +111,7 @@ class ItemStore: ObservableObject {
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.itemCreationError
             }
             return false
         }
@@ -125,7 +125,7 @@ class ItemStore: ObservableObject {
             var updatedItem = item
             updatedItem.updatedAt = Date()
             
-            try await db.collection("items").document(itemID).setData(from: updatedItem, merge: true)
+            try await db.collection(AppConstants.FirebaseCollections.items).document(itemID).setData(from: updatedItem, merge: true)
             
             await MainActor.run {
                 if let index = items.firstIndex(where: { $0.id == itemID }) {
@@ -138,7 +138,7 @@ class ItemStore: ObservableObject {
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.itemCreationError
             }
             return false
         }
@@ -150,7 +150,7 @@ class ItemStore: ObservableObject {
         
         do {
             // Delete from Firestore
-            try await db.collection("items").document(itemID).delete()
+            try await db.collection(AppConstants.FirebaseCollections.items).document(itemID).delete()
             
             // Delete images from Storage
             for imageURL in item.imageURLs {
@@ -167,7 +167,7 @@ class ItemStore: ObservableObject {
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.networkError
             }
             return false
         }
@@ -185,7 +185,7 @@ class ItemStore: ObservableObject {
                 "updatedAt": FieldValue.serverTimestamp()
             ]
             
-            try await db.collection("items").document(itemID).updateData(updateData)
+            try await db.collection(AppConstants.FirebaseCollections.items).document(itemID).updateData(updateData)
             
             await MainActor.run {
                 if let index = items.firstIndex(where: { $0.id == itemID }) {
@@ -261,7 +261,7 @@ class ItemStore: ObservableObject {
         guard let itemID = item.id else { return }
         
         do {
-            try await db.collection("items").document(itemID).updateData([
+            try await db.collection(AppConstants.FirebaseCollections.items).document(itemID).updateData([
                 "views": FieldValue.increment(Int64(1))
             ])
             
@@ -272,7 +272,7 @@ class ItemStore: ObservableObject {
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Failed to update view count"
+                errorMessage = AppConstants.ErrorMessages.networkError
             }
         }
     }
@@ -283,7 +283,7 @@ class ItemStore: ObservableObject {
         // This would typically check if user already liked and toggle accordingly
         // For simplicity, we'll just increment
         do {
-            try await db.collection("items").document(itemID).updateData([
+            try await db.collection(AppConstants.FirebaseCollections.items).document(itemID).updateData([
                 "likes": FieldValue.increment(Int64(1))
             ])
             
@@ -294,7 +294,7 @@ class ItemStore: ObservableObject {
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Failed to update like status"
+                errorMessage = AppConstants.ErrorMessages.networkError
             }
         }
     }
@@ -307,7 +307,7 @@ class ItemStore: ObservableObject {
             guard let imageData = image.jpegData(compressionQuality: 0.8) else { continue }
             
             let fileName = "\(UUID().uuidString)_\(index).jpg"
-            let storageRef = storage.reference().child("item_images/\(fileName)")
+            let storageRef = storage.reference().child("\(AppConstants.FirebaseStoragePaths.itemImages)/\(fileName)")
             
             let _ = try await storageRef.putDataAsync(imageData)
             let downloadURL = try await storageRef.downloadURL()

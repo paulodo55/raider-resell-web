@@ -2,7 +2,7 @@ import SwiftUI
 import FirebaseCore
 
 @main
-struct RaiderReSeillApp: App {
+struct RaiderReSellApp: App {
     
     init() {
         FirebaseApp.configure()

@@ -28,7 +28,7 @@ class ChatStore: ObservableObject {
     private func setupChatsListener() {
         guard let currentUserID = Auth.auth().currentUser?.uid else { return }
         
-        chatsListener = db.collection("chats")
+        chatsListener = db.collection(AppConstants.FirebaseCollections.chats)
             .whereField("participantIDs", arrayContains: currentUserID)
             .order(by: "lastMessageTimestamp", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
@@ -49,8 +49,8 @@ class ChatStore: ObservableObject {
         messagesListener?.remove()
         currentChatID = chatID
         
-        messagesListener = db.collection("chats").document(chatID)
-            .collection("messages")
+        messagesListener = db.collection(AppConstants.FirebaseCollections.chats).document(chatID)
+            .collection(AppConstants.FirebaseCollections.messages)
             .order(by: "timestamp", descending: false)
             .addSnapshotListener { [weak self] snapshot, error in
                 DispatchQueue.main.async {
@@ -90,7 +90,7 @@ class ChatStore: ObservableObject {
         )
         
         do {
-            let chatRef = try await db.collection("chats").addDocument(from: chat)
+            let chatRef = try await db.collection(AppConstants.FirebaseCollections.chats).addDocument(from: chat)
             
             // Send initial message
             let initialMessage = Message(
@@ -107,7 +107,7 @@ class ChatStore: ObservableObject {
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.messageSendError
             }
             return nil
         }
@@ -115,7 +115,7 @@ class ChatStore: ObservableObject {
     
     private func findExistingChat(itemID: String, buyerID: String, sellerID: String) async -> String? {
         do {
-            let snapshot = try await db.collection("chats")
+            let snapshot = try await db.collection(AppConstants.FirebaseCollections.chats)
                 .whereField("itemID", isEqualTo: itemID)
                 .whereField("buyerID", isEqualTo: buyerID)
                 .whereField("sellerID", isEqualTo: sellerID)
@@ -130,13 +130,13 @@ class ChatStore: ObservableObject {
     // MARK: - Send Message
     func sendMessage(_ message: Message) async {
         do {
-            let messageRef = try await db.collection("chats")
+            let messageRef = try await db.collection(AppConstants.FirebaseCollections.chats)
                 .document(message.chatID)
-                .collection("messages")
+                .collection(AppConstants.FirebaseCollections.messages)
                 .addDocument(from: message)
             
             // Update chat with last message info
-            try await db.collection("chats").document(message.chatID).updateData([
+            try await db.collection(AppConstants.FirebaseCollections.chats).document(message.chatID).updateData([
                 "lastMessage": message.content,
                 "lastMessageTimestamp": FieldValue.serverTimestamp(),
                 "lastMessageSenderID": message.senderID
@@ -144,7 +144,7 @@ class ChatStore: ObservableObject {
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.messageSendError
             }
         }
     }
@@ -194,9 +194,9 @@ class ChatStore: ObservableObject {
         
         Task {
             do {
-                let snapshot = try await db.collection("chats")
+                let snapshot = try await db.collection(AppConstants.FirebaseCollections.chats)
                     .document(chatID)
-                    .collection("messages")
+                    .collection(AppConstants.FirebaseCollections.messages)
                     .whereField("senderID", isNotEqualTo: currentUserID)
                     .whereField("status", isNotEqualTo: MessageStatus.read.rawValue)
                     .getDocuments()
@@ -210,13 +210,13 @@ class ChatStore: ObservableObject {
                 try await batch.commit()
                 
                 // Update unread count in chat
-                try await db.collection("chats").document(chatID).updateData([
+                try await db.collection(AppConstants.FirebaseCollections.chats).document(chatID).updateData([
                     "unreadCount": 0
                 ])
                 
                     } catch {
             DispatchQueue.main.async {
-                self.errorMessage = "Failed to mark messages as read"
+                self.errorMessage = AppConstants.ErrorMessages.networkError
             }
         }
         }
@@ -237,10 +237,10 @@ class ChatStore: ObservableObject {
         )
         
         do {
-            try await db.collection("offers").addDocument(from: offer)
+            try await db.collection(AppConstants.FirebaseCollections.offers).addDocument(from: offer)
             
             // Update chat with current offer
-            try await db.collection("chats").document(chatID).updateData([
+            try await db.collection(AppConstants.FirebaseCollections.chats).document(chatID).updateData([
                 "currentOffer": amount,
                 "offerStatus": OfferStatus.pending.rawValue
             ])
@@ -252,7 +252,7 @@ class ChatStore: ObservableObject {
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.offerCreationError
             }
             return false
         }
@@ -269,13 +269,13 @@ class ChatStore: ObservableObject {
                 updateData["amount"] = counterAmount
             }
             
-            try await db.collection("offers").document(offerID).updateData(updateData)
+            try await db.collection(AppConstants.FirebaseCollections.offers).document(offerID).updateData(updateData)
             
             return true
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.offerCreationError
             }
             return false
         }
@@ -310,11 +310,11 @@ class ChatStore: ObservableObject {
     
     private func uploadMessageImage(_ image: UIImage) async throws -> String {
         guard let imageData = image.jpegData(compressionQuality: 0.7) else {
-            throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not compress image"])
+            throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: AppConstants.ErrorMessages.imageUploadError])
         }
         
         let fileName = "\(UUID().uuidString).jpg"
-        let storageRef = Storage.storage().reference().child("message_images/\(fileName)")
+        let storageRef = Storage.storage().reference().child("\(AppConstants.FirebaseStoragePaths.messageImages)/\(fileName)")
         
         let _ = try await storageRef.putDataAsync(imageData)
         let downloadURL = try await storageRef.downloadURL()
@@ -328,9 +328,9 @@ class ChatStore: ObservableObject {
         
         do {
             // Delete all messages in the chat
-            let messagesSnapshot = try await db.collection("chats")
+            let messagesSnapshot = try await db.collection(AppConstants.FirebaseCollections.chats)
                 .document(chatID)
-                .collection("messages")
+                .collection(AppConstants.FirebaseCollections.messages)
                 .getDocuments()
             
             let batch = db.batch()
@@ -340,7 +340,7 @@ class ChatStore: ObservableObject {
             }
             
             // Delete the chat document
-            batch.deleteDocument(db.collection("chats").document(chatID))
+            batch.deleteDocument(db.collection(AppConstants.FirebaseCollections.chats).document(chatID))
             
             try await batch.commit()
             
@@ -352,7 +352,7 @@ class ChatStore: ObservableObject {
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.networkError
             }
             return false
         }
@@ -362,7 +362,7 @@ class ChatStore: ObservableObject {
         guard let chatID = chat.id else { return false }
         
         do {
-            try await db.collection("chats").document(chatID).updateData([
+            try await db.collection(AppConstants.FirebaseCollections.chats).document(chatID).updateData([
                 "isActive": false
             ])
             
@@ -370,7 +370,7 @@ class ChatStore: ObservableObject {
             
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = AppConstants.ErrorMessages.networkError
             }
             return false
         }
