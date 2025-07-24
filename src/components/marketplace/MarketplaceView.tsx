@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useChatStore } from '@/hooks/useChatStore';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { ItemCategory, CATEGORY_ICONS, CONDITION_COLORS } from '@/utils/constants';
+import toast from 'react-hot-toast';
 
 // Mock data for demonstration
 const mockItems = [
@@ -20,6 +22,7 @@ const mockItems = [
     imageURLs: ['https://via.placeholder.com/300x200?text=MacBook'],
     location: 'Knapp Hall',
     sellerName: 'John Doe',
+    sellerId: 'seller-1',
     views: 45,
     likes: 12,
     timeAgo: '2 hours ago'
@@ -35,6 +38,7 @@ const mockItems = [
     imageURLs: ['https://via.placeholder.com/300x200?text=Textbook'],
     location: 'Wall Hall',
     sellerName: 'Sarah Smith',
+    sellerId: 'seller-2',
     views: 23,
     likes: 8,
     timeAgo: '5 hours ago'
@@ -49,6 +53,7 @@ const mockItems = [
     imageURLs: ['https://via.placeholder.com/300x200?text=Hoodie'],
     location: 'Murdough Hall',
     sellerName: 'Mike Johnson',
+    sellerId: 'buyer-1',
     views: 18,
     likes: 5,
     timeAgo: '1 day ago'
@@ -63,14 +68,20 @@ const mockItems = [
     imageURLs: ['https://via.placeholder.com/300x200?text=Furniture'],
     location: 'Coleman Hall',
     sellerName: 'Lisa Chen',
+    sellerId: 'seller-4',
     views: 31,
     likes: 9,
     timeAgo: '2 days ago'
   }
 ];
 
-export default function MarketplaceView() {
+interface MarketplaceViewProps {
+  onNavigateToChat?: () => void;
+}
+
+export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewProps) {
   const { currentUser } = useAuth();
+  const { createChatWithSeller } = useChatStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ItemCategory | null>(null);
   const [items, setItems] = useState(mockItems);
@@ -82,6 +93,7 @@ export default function MarketplaceView() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [contactingseller, setContactingseller] = useState(false);
 
   const categories = Object.values(ItemCategory);
   const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
@@ -112,6 +124,49 @@ export default function MarketplaceView() {
     setItems(prev => prev.map(item => 
       item.id === itemId ? { ...item, likes: item.likes + 1 } : item
     ));
+  };
+
+  const handleContactSeller = async (item: any) => {
+    if (!currentUser) {
+      toast.error('Please sign in to contact sellers');
+      return;
+    }
+
+    if (item.sellerId === (currentUser.id || 'current-user')) {
+      toast.error("You can't contact yourself!");
+      return;
+    }
+
+    try {
+      setContactingseller(true);
+      toast.loading('Starting conversation...', { id: 'contact-seller' });
+
+      const chatId = await createChatWithSeller(
+        item.id,
+        item.title,
+        item.imageURLs[0],
+        item.sellerId,
+        item.sellerName
+      );
+
+      toast.success('Chat started! Redirecting...', { id: 'contact-seller' });
+      
+      // Close modal and navigate to chat
+      setSelectedItem(null);
+      
+      // Navigate to chat tab
+      if (onNavigateToChat) {
+        setTimeout(() => {
+          onNavigateToChat();
+        }, 500);
+      }
+
+    } catch (error) {
+      console.error('Error contacting seller:', error);
+      toast.error('Failed to start chat. Please try again.', { id: 'contact-seller' });
+    } finally {
+      setContactingseller(false);
+    }
   };
 
   const clearFilters = () => {
@@ -457,8 +512,13 @@ export default function MarketplaceView() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="primary" className="flex-1">
-                  💬 Contact Seller
+                <Button 
+                  variant="primary" 
+                  className="flex-1"
+                  onClick={() => handleContactSeller(selectedItem)}
+                  disabled={contactingseller}
+                >
+                  {contactingseller ? '💬 Starting Chat...' : '💬 Contact Seller'}
                 </Button>
                 <Button 
                   variant="outline"
@@ -468,9 +528,11 @@ export default function MarketplaceView() {
                 </Button>
               </div>
 
-              <p className="text-center text-xs text-texas-gray-500 mt-4">
-                🚧 Chat functionality coming soon! This is a demo.
-              </p>
+              {selectedItem.sellerId === (currentUser?.id || 'current-user') && (
+                <p className="text-center text-xs text-texas-gray-500 mt-4">
+                  ℹ️ This is your own listing
+                </p>
+              )}
             </div>
           </div>
         </div>

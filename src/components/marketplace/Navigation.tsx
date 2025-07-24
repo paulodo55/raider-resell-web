@@ -2,7 +2,7 @@
 
 interface NavigationProps {
   activeTab: string;
-  onTabChange: (tab: 'marketplace' | 'profile') => void;
+  onTabChange: (tab: 'marketplace' | 'profile' | 'chats') => void;
 }
 
 export default function Navigation({ activeTab, onTabChange }: NavigationProps) {
@@ -12,6 +12,12 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
       label: 'Marketplace',
       icon: '🏪',
       activeIcon: '🏪'
+    },
+    {
+      id: 'chats' as const,
+      label: 'Chats',
+      icon: '💬',
+      activeIcon: '💬'
     },
     {
       id: 'profile' as const,
@@ -25,7 +31,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
     <>
       {/* Mobile Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-texas-gray-200 md:hidden">
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-3">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -84,7 +90,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
           <div className="text-center mb-4">
             <div className="inline-flex items-center px-3 py-2 bg-texas-red-50 rounded-full">
               <span className="text-texas-red text-sm font-medium">
-                ✨ Coming Soon: Chat & Sell Features
+                ✨ New: Real-time Chat System!
               </span>
             </div>
           </div>

@@ -77,4 +77,71 @@ export enum SortOption {
   PRICE_HIGH_TO_LOW = 'priceHighToLow',
   MOST_VIEWED = 'mostViewed',
   MOST_LIKED = 'mostLiked'
+}
+
+// Chat Types
+export enum MessageType {
+  TEXT = 'text',
+  IMAGE = 'image',
+  OFFER = 'offer',
+  SYSTEM = 'system'
+}
+
+export enum MessageStatus {
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  READ = 'read'
+}
+
+export interface Message {
+  id: string;
+  chatID: string;
+  senderID: string;
+  senderName: string;
+  type: MessageType;
+  content: string;
+  imageURL?: string;
+  offerID?: string;
+  status: MessageStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum OfferStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  DECLINED = 'declined',
+  COUNTER = 'counter',
+  EXPIRED = 'expired'
+}
+
+export interface Offer {
+  id: string;
+  chatID: string;
+  itemID: string;
+  buyerID: string;
+  sellerID: string;
+  originalPrice: number;
+  offerPrice: number;
+  message?: string;
+  status: OfferStatus;
+  expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Chat {
+  id: string;
+  itemID: string;
+  itemTitle: string;
+  itemImageURL: string;
+  buyerID: string;
+  buyerName: string;
+  sellerID: string;
+  sellerName: string;
+  lastMessage?: Message;
+  unreadCount: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 } 
