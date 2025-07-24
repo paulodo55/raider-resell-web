@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "src/app/api/**/*.{js,ts}": {
-      "runtime": "nodejs22.x"
-    }
-  },
   "regions": ["iad1"],
   "buildCommand": "npm run build"
 } 
