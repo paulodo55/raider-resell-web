@@ -40,19 +40,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Check if user is stored in localStorage (mock persistence)
     const storedUser = localStorage.getItem('raider-resell-user');
     if (storedUser) {
-      try {
+        try {
         const user = JSON.parse(storedUser);
-        setCurrentUser({
+            setCurrentUser({
           ...user,
           createdAt: new Date(user.createdAt),
           lastActive: new Date(user.lastActive)
-        });
-      } catch (error) {
+            });
+        } catch (error) {
         console.error('Error parsing stored user:', error);
         localStorage.removeItem('raider-resell-user');
       }
     }
-    setLoading(false);
+      setLoading(false);
   }, []);
 
   const signUp = async (email: string, password: string, userData: Partial<User>): Promise<boolean> => {
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
         mockUsers[email] = user;
       }
-
+      
       // Update last active
       user.lastActive = new Date();
       

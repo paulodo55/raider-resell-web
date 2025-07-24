@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { ItemCategory, CATEGORY_ICONS } from '@/utils/constants';
+import { ItemCategory, CATEGORY_ICONS, CONDITION_COLORS } from '@/utils/constants';
 
 // Mock data for demonstration
 const mockItems = [
@@ -75,16 +75,51 @@ export default function MarketplaceView() {
   const [selectedCategory, setSelectedCategory] = useState<ItemCategory | null>(null);
   const [items, setItems] = useState(mockItems);
   const [loading, setLoading] = useState(false);
+  
+  // Filter and Modal States
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   const categories = Object.values(ItemCategory);
+  const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
+  const locations = ['Knapp Hall', 'Wall Hall', 'Murdough Hall', 'Coleman Hall', 'Chitwood Hall', 'Other'];
 
   const filteredItems = items.filter(item => {
     const matchesSearch = !searchQuery || 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !selectedCategory || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesPrice = item.price >= priceRange[0] && item.price <= priceRange[1];
+    const matchesCondition = selectedConditions.length === 0 || selectedConditions.includes(item.condition);
+    const matchesLocation = selectedLocations.length === 0 || selectedLocations.includes(item.location);
+    
+    return matchesSearch && matchesCategory && matchesPrice && matchesCondition && matchesLocation;
   });
+
+  const handleItemClick = (item: any) => {
+    setSelectedItem(item);
+    // Simulate view increment
+    setItems(prev => prev.map(i => 
+      i.id === item.id ? { ...i, views: i.views + 1 } : i
+    ));
+  };
+
+  const handleLikeClick = (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation();
+    setItems(prev => prev.map(item => 
+      item.id === itemId ? { ...item, likes: item.likes + 1 } : item
+    ));
+  };
+
+  const clearFilters = () => {
+    setPriceRange([0, 1000]);
+    setSelectedConditions([]);
+    setSelectedLocations([]);
+    setShowFilters(false);
+  };
 
   return (
     <div className="min-h-screen bg-texas-gray-50 md:ml-64">
@@ -127,13 +162,109 @@ export default function MarketplaceView() {
               <Button variant="primary" size="sm">
                 🔍 Search
               </Button>
-              <Button variant="outline" size="sm">
-                ⚙️ Filters
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                ⚙️ Filters {(selectedConditions.length > 0 || selectedLocations.length > 0 || priceRange[0] > 0 || priceRange[1] < 1000) && `(${selectedConditions.length + selectedLocations.length + (priceRange[0] > 0 ? 1 : 0) + (priceRange[1] < 1000 ? 1 : 0)})`}
               </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="bg-white border-b border-texas-gray-200 px-4 py-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Price Range */}
+              <div>
+                <h3 className="font-semibold text-texas-gray-900 mb-3">Price Range</h3>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={priceRange[0]}
+                      onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                      className="text-sm"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={priceRange[1]}
+                      onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 1000])}
+                      className="text-sm"
+                    />
+                  </div>
+                  <p className="text-xs text-texas-gray-500">
+                    ${priceRange[0]} - ${priceRange[1]}
+                  </p>
+                </div>
+              </div>
+
+              {/* Condition */}
+              <div>
+                <h3 className="font-semibold text-texas-gray-900 mb-3">Condition</h3>
+                <div className="space-y-2">
+                  {conditions.map((condition) => (
+                    <label key={condition} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedConditions.includes(condition)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedConditions([...selectedConditions, condition]);
+                          } else {
+                            setSelectedConditions(selectedConditions.filter(c => c !== condition));
+                          }
+                        }}
+                        className="w-4 h-4 text-texas-red"
+                      />
+                      <span className="text-sm text-texas-gray-700">{condition}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <h3 className="font-semibold text-texas-gray-900 mb-3">Location</h3>
+                <div className="space-y-2">
+                  {locations.map((location) => (
+                    <label key={location} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedLocations.includes(location)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedLocations([...selectedLocations, location]);
+                          } else {
+                            setSelectedLocations(selectedLocations.filter(l => l !== location));
+                          }
+                        }}
+                        className="w-4 h-4 text-texas-red"
+                      />
+                      <span className="text-sm text-texas-gray-700">{location}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <Button onClick={clearFilters} variant="outline" size="sm">
+                Clear All
+              </Button>
+              <Button onClick={() => setShowFilters(false)} variant="primary" size="sm">
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Category Pills */}
       <div className="bg-white border-b border-texas-gray-200 px-4 py-4">
@@ -190,7 +321,12 @@ export default function MarketplaceView() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredItems.map((item) => (
-              <Card key={item.id} variant="elevated" className="hover:scale-105 transition-transform duration-200 cursor-pointer">
+              <Card 
+                key={item.id} 
+                variant="elevated" 
+                className="hover:scale-105 transition-transform duration-200 cursor-pointer"
+                onClick={() => handleItemClick(item)}
+              >
                 <div className="relative">
                   <img
                     src={item.imageURLs[0]}
@@ -222,7 +358,10 @@ export default function MarketplaceView() {
                         </span>
                       )}
                     </div>
-                    <button className="text-texas-red hover:text-texas-red-600 transition-colors">
+                    <button 
+                      className="text-texas-red hover:text-texas-red-600 transition-colors"
+                      onClick={(e) => handleLikeClick(e, item.id)}
+                    >
                       ❤️ {item.likes}
                     </button>
                   </div>
@@ -236,7 +375,14 @@ export default function MarketplaceView() {
                     <span className="text-xs text-texas-gray-500">
                       {item.timeAgo}
                     </span>
-                    <Button variant="primary" size="sm">
+                    <Button 
+                      variant="primary" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleItemClick(item);
+                      }}
+                    >
                       View Details
                     </Button>
                   </div>
@@ -246,6 +392,89 @@ export default function MarketplaceView() {
           </div>
         )}
       </div>
+
+      {/* Item Detail Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="relative">
+              <img
+                src={selectedItem.imageURLs[0]}
+                alt={selectedItem.title}
+                className="w-full h-64 object-cover"
+              />
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="absolute top-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-texas-gray-900 mb-2">
+                    {selectedItem.title}
+                  </h2>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-3xl font-bold text-texas-red">
+                      ${selectedItem.price}
+                    </span>
+                    {selectedItem.originalPrice && (
+                      <span className="text-lg text-texas-gray-500 line-through">
+                        ${selectedItem.originalPrice}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-white text-sm font-medium ${CONDITION_COLORS[selectedItem.condition] || 'bg-gray-500'}`}>
+                  {selectedItem.condition}
+                </div>
+              </div>
+
+              <p className="text-texas-gray-700 mb-6 leading-relaxed">
+                {selectedItem.description}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-texas-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-texas-gray-900 mb-2">📍 Location</h4>
+                  <p className="text-texas-gray-600">{selectedItem.location}</p>
+                </div>
+                <div className="bg-texas-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-texas-gray-900 mb-2">👤 Seller</h4>
+                  <p className="text-texas-gray-600">{selectedItem.sellerName}</p>
+                </div>
+                <div className="bg-texas-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-texas-gray-900 mb-2">👁️ Views</h4>
+                  <p className="text-texas-gray-600">{selectedItem.views}</p>
+                </div>
+                <div className="bg-texas-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-texas-gray-900 mb-2">❤️ Likes</h4>
+                  <p className="text-texas-gray-600">{selectedItem.likes}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="primary" className="flex-1">
+                  💬 Contact Seller
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={(e) => handleLikeClick(e, selectedItem.id)}
+                >
+                  ❤️ Like
+                </Button>
+              </div>
+
+              <p className="text-center text-xs text-texas-gray-500 mt-4">
+                🚧 Chat functionality coming soon! This is a demo.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

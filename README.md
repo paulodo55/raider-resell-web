@@ -105,7 +105,7 @@ Raider ReSell is a user-friendly marketplace web application designed specifical
    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
    GEMINI_API_KEY=your_gemini_api_key_here
-   ```
+     ```
 
 5. **Build and Run**
    ```bash
