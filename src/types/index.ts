@@ -16,6 +16,7 @@ export interface User {
   isVerified: boolean;
   createdAt: Date;
   lastActive: Date;
+  locationPreferences?: LocationPreferences;
 }
 
 export enum ItemCategory {
@@ -45,6 +46,36 @@ export enum ItemStatus {
   DRAFT = 'draft'
 }
 
+// Location Types
+export enum LocationType {
+  ON_CAMPUS = 'on_campus',
+  OFF_CAMPUS = 'off_campus'
+}
+
+export enum DistanceRange {
+  UNDER_5 = 'under_5',
+  RANGE_5_10 = '5_to_10',
+  RANGE_10_15 = '10_to_15', 
+  RANGE_15_20 = '15_to_20',
+  RANGE_20_25 = '20_to_25',
+  OVER_25 = 'over_25'
+}
+
+export interface LocationInfo {
+  locationType: LocationType;
+  specificLocation: string; // e.g., "Knapp Hall" or "4th Street Apartments"
+  distanceRange?: DistanceRange; // Only for off-campus locations
+  exactDistance?: number; // In miles, for precise calculations
+  address?: string; // Full address for off-campus locations
+}
+
+export interface LocationPreferences {
+  maxDistance: number; // Maximum distance in miles
+  preferOnCampus: boolean;
+  acceptedDistanceRanges: DistanceRange[];
+  excludedAreas?: string[]; // Areas user wants to avoid
+}
+
 export interface Item {
   id?: string;
   title: string;
@@ -57,7 +88,7 @@ export interface Item {
   sellerID: string;
   sellerName: string;
   imageURLs: string[];
-  location: string;
+  location: LocationInfo; // Updated to use LocationInfo instead of string
   isNegotiable: boolean;
   views: number;
   likes: number;
@@ -76,7 +107,8 @@ export enum SortOption {
   PRICE_LOW_TO_HIGH = 'priceLowToHigh',
   PRICE_HIGH_TO_LOW = 'priceHighToLow',
   MOST_VIEWED = 'mostViewed',
-  MOST_LIKED = 'mostLiked'
+  MOST_LIKED = 'mostLiked',
+  CLOSEST_DISTANCE = 'closestDistance'
 }
 
 // Chat Types

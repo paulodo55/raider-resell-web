@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useContext, createContext, ReactNode } from 'react';
-import { User } from '@/types';
-import { APP_CONSTANTS } from '@/utils/constants';
+import { User, DistanceRange } from '@/types';
+import { APP_CONSTANTS, DEFAULT_LOCATION_PREFERENCES } from '@/utils/constants';
 import toast from 'react-hot-toast';
 
 interface AuthContextType {
@@ -17,14 +17,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
-
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -37,22 +29,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is stored in localStorage (mock persistence)
     const storedUser = localStorage.getItem('raider-resell-user');
     if (storedUser) {
-        try {
+      try {
         const user = JSON.parse(storedUser);
-            setCurrentUser({
+        setCurrentUser({
           ...user,
           createdAt: new Date(user.createdAt),
           lastActive: new Date(user.lastActive)
-            });
-        } catch (error) {
+        });
+      } catch (error) {
         console.error('Error parsing stored user:', error);
         localStorage.removeItem('raider-resell-user');
       }
     }
-      setLoading(false);
+    setLoading(false);
   }, []);
 
   const signUp = async (email: string, password: string, userData: Partial<User>): Promise<boolean> => {
@@ -65,12 +56,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return false;
       }
 
-      // Validate student ID
-      const studentID = userData.studentID || '';
-      if (studentID.length < APP_CONSTANTS.VALIDATION.STUDENT_ID_MIN_LENGTH || 
-          studentID.length > APP_CONSTANTS.VALIDATION.STUDENT_ID_MAX_LENGTH || 
-          !/^\d+$/.test(studentID)) {
-        toast.error(APP_CONSTANTS.ERROR_MESSAGES.INVALID_STUDENT_ID);
+      // Validate password
+      if (password.length < APP_CONSTANTS.VALIDATION.PASSWORD_MIN_LENGTH) {
+        toast.error(APP_CONSTANTS.ERROR_MESSAGES.PASSWORD_TOO_SHORT);
         return false;
       }
 
@@ -80,13 +68,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return false;
       }
 
-      // Create user
       const newUser: User = {
         id: Date.now().toString(),
         email,
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
-        studentID,
+        studentID: userData.studentID || '',
         graduationYear: userData.graduationYear || new Date().getFullYear() + 4,
         rating: 0,
         totalRatings: 0,
@@ -95,15 +82,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isVerified: false,
         createdAt: new Date(),
         lastActive: new Date(),
+        locationPreferences: {
+          ...DEFAULT_LOCATION_PREFERENCES,
+          acceptedDistanceRanges: DEFAULT_LOCATION_PREFERENCES.acceptedDistanceRanges as DistanceRange[]
+        },
         ...userData
       };
 
-      // Store user
       mockUsers[email] = newUser;
       setCurrentUser(newUser);
       localStorage.setItem('raider-resell-user', JSON.stringify(newUser));
-
       toast.success(APP_CONSTANTS.SUCCESS_MESSAGES.ACCOUNT_CREATED);
+      
       return true;
     } catch (error: any) {
       console.error('Sign up error:', error);
@@ -141,7 +131,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           itemsBought: 8,
           isVerified: true,
           createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-          lastActive: new Date()
+          lastActive: new Date(),
+          locationPreferences: {
+            ...DEFAULT_LOCATION_PREFERENCES,
+            maxDistance: 10,
+            acceptedDistanceRanges: [DistanceRange.UNDER_5, DistanceRange.RANGE_5_10]
+          }
         };
         mockUsers[email] = user;
       }
@@ -178,12 +173,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         toast.error(APP_CONSTANTS.ERROR_MESSAGES.INVALID_EMAIL);
         return false;
       }
-      
+
       toast.success(APP_CONSTANTS.SUCCESS_MESSAGES.PASSWORD_RESET);
       return true;
     } catch (error: any) {
       console.error('Password reset error:', error);
-      toast.error(error.message || 'Error sending password reset email');
+      toast.error('Error sending password reset email');
       return false;
     }
   };
@@ -191,16 +186,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateUserProfile = async (userData: Partial<User>): Promise<boolean> => {
     try {
       if (!currentUser) return false;
-      
+
       const updatedUser = { ...currentUser, ...userData };
       setCurrentUser(updatedUser);
       localStorage.setItem('raider-resell-user', JSON.stringify(updatedUser));
+      
+      // Update in mock users as well
+      if (currentUser.email) {
+        mockUsers[currentUser.email] = updatedUser;
+      }
       
       toast.success(APP_CONSTANTS.SUCCESS_MESSAGES.PROFILE_UPDATED);
       return true;
     } catch (error: any) {
       console.error('Profile update error:', error);
-      toast.error(error.message || 'Error updating profile');
+      toast.error('Error updating profile');
       return false;
     }
   };
@@ -220,4 +220,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 } 

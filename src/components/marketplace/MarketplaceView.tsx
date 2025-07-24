@@ -6,10 +6,11 @@ import { useChatStore } from '@/hooks/useChatStore';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { ItemCategory, CATEGORY_ICONS, CONDITION_COLORS } from '@/utils/constants';
+import { ItemCategory, CATEGORY_ICONS, CONDITION_COLORS, DISTANCE_RANGE_LABELS, LOCATION_ICONS } from '@/utils/constants';
+import { LocationType, DistanceRange, LocationInfo } from '@/types';
 import toast from 'react-hot-toast';
 
-// Mock data for demonstration
+// Mock data with new location system
 const mockItems = [
   {
     id: '1',
@@ -20,7 +21,11 @@ const mockItems = [
     category: ItemCategory.ELECTRONICS,
     condition: 'Like New',
     imageURLs: ['https://via.placeholder.com/300x200?text=MacBook'],
-    location: 'Knapp Hall',
+    location: {
+      locationType: LocationType.ON_CAMPUS,
+      specificLocation: 'Knapp Hall',
+      exactDistance: 0
+    } as LocationInfo,
     sellerName: 'John Doe',
     sellerId: 'seller-1',
     views: 45,
@@ -36,7 +41,11 @@ const mockItems = [
     category: ItemCategory.TEXTBOOKS,
     condition: 'Good',
     imageURLs: ['https://via.placeholder.com/300x200?text=Textbook'],
-    location: 'Wall Hall',
+    location: {
+      locationType: LocationType.ON_CAMPUS,
+      specificLocation: 'Wall Hall',
+      exactDistance: 0
+    } as LocationInfo,
     sellerName: 'Sarah Smith',
     sellerId: 'seller-2',
     views: 23,
@@ -51,7 +60,13 @@ const mockItems = [
     category: ItemCategory.CLOTHING,
     condition: 'Good',
     imageURLs: ['https://via.placeholder.com/300x200?text=Hoodie'],
-    location: 'Murdough Hall',
+    location: {
+      locationType: LocationType.OFF_CAMPUS,
+      specificLocation: 'University Courtyard',
+      distanceRange: DistanceRange.UNDER_5,
+      exactDistance: 2.3,
+      address: '2324 Main St, Lubbock, TX'
+    } as LocationInfo,
     sellerName: 'Mike Johnson',
     sellerId: 'buyer-1',
     views: 18,
@@ -66,12 +81,61 @@ const mockItems = [
     category: ItemCategory.FURNITURE,
     condition: 'Fair',
     imageURLs: ['https://via.placeholder.com/300x200?text=Furniture'],
-    location: 'Coleman Hall',
+    location: {
+      locationType: LocationType.OFF_CAMPUS,
+      specificLocation: 'Sterling University Trails',
+      distanceRange: DistanceRange.RANGE_5_10,
+      exactDistance: 6.8,
+      address: '6102 4th St, Lubbock, TX'
+    } as LocationInfo,
     sellerName: 'Lisa Chen',
     sellerId: 'seller-4',
     views: 31,
     likes: 9,
     timeAgo: '2 days ago'
+  },
+  {
+    id: '5',
+    title: 'Gaming Chair - RGB',
+    description: 'Professional gaming chair with RGB lighting. Very comfortable for long study sessions.',
+    price: 150,
+    originalPrice: 250,
+    category: ItemCategory.FURNITURE,
+    condition: 'Good',
+    imageURLs: ['https://via.placeholder.com/300x200?text=Gaming+Chair'],
+    location: {
+      locationType: LocationType.OFF_CAMPUS,
+      specificLocation: 'Tech Terrace',
+      distanceRange: DistanceRange.RANGE_10_15,
+      exactDistance: 12.1,
+      address: '2408 26th St, Lubbock, TX'
+    } as LocationInfo,
+    sellerName: 'Alex Rodriguez',
+    sellerId: 'seller-5',
+    views: 62,
+    likes: 18,
+    timeAgo: '3 hours ago'
+  },
+  {
+    id: '6',
+    title: 'Calculus III Solutions Manual',
+    description: 'Step-by-step solutions for all problems. Perfect for MATH 2350.',
+    price: 35,
+    category: ItemCategory.TEXTBOOKS,
+    condition: 'Good',
+    imageURLs: ['https://via.placeholder.com/300x200?text=Solutions+Manual'],
+    location: {
+      locationType: LocationType.OFF_CAMPUS,
+      specificLocation: 'Campus Lodge',
+      distanceRange: DistanceRange.RANGE_15_20,
+      exactDistance: 17.5,
+      address: '5720 66th St, Lubbock, TX'
+    } as LocationInfo,
+    sellerName: 'Emma Wilson',
+    sellerId: 'seller-6',
+    views: 28,
+    likes: 7,
+    timeAgo: '6 hours ago'
   }
 ];
 
@@ -94,10 +158,16 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [contactingseller, setContactingseller] = useState(false);
+  
+  // Location Filter States
+  const [locationFilter, setLocationFilter] = useState<'all' | 'on_campus' | 'off_campus'>('all');
+  const [selectedDistanceRanges, setSelectedDistanceRanges] = useState<DistanceRange[]>([]);
+  const [maxDistance, setMaxDistance] = useState<number>(25);
 
   const categories = Object.values(ItemCategory);
   const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
-  const locations = ['Knapp Hall', 'Wall Hall', 'Murdough Hall', 'Coleman Hall', 'Chitwood Hall', 'Other'];
+  const locations = ['Knapp Hall', 'Wall Hall', 'Murdough Hall', 'Coleman Hall', 'Chitwood Hall', 'University Courtyard', 'Sterling University Trails', 'Tech Terrace', 'Campus Lodge', 'Other'];
+  const distanceRanges = Object.values(DistanceRange);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = !searchQuery || 
@@ -106,9 +176,20 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
     const matchesCategory = !selectedCategory || item.category === selectedCategory;
     const matchesPrice = item.price >= priceRange[0] && item.price <= priceRange[1];
     const matchesCondition = selectedConditions.length === 0 || selectedConditions.includes(item.condition);
-    const matchesLocation = selectedLocations.length === 0 || selectedLocations.includes(item.location);
+    const matchesLocation = selectedLocations.length === 0 || selectedLocations.includes(item.location.specificLocation);
     
-    return matchesSearch && matchesCategory && matchesPrice && matchesCondition && matchesLocation;
+    // Location-based filtering
+    const matchesLocationType = locationFilter === 'all' || 
+      (locationFilter === 'on_campus' && item.location.locationType === LocationType.ON_CAMPUS) ||
+      (locationFilter === 'off_campus' && item.location.locationType === LocationType.OFF_CAMPUS);
+    
+    const matchesDistanceRange = selectedDistanceRanges.length === 0 || 
+      (item.location.distanceRange && selectedDistanceRanges.includes(item.location.distanceRange));
+    
+    const matchesMaxDistance = !item.location.exactDistance || item.location.exactDistance <= maxDistance;
+    
+    return matchesSearch && matchesCategory && matchesPrice && matchesCondition && 
+           matchesLocation && matchesLocationType && matchesDistanceRange && matchesMaxDistance;
   });
 
   const handleItemClick = (item: any) => {
@@ -173,7 +254,36 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
     setPriceRange([0, 1000]);
     setSelectedConditions([]);
     setSelectedLocations([]);
+    setLocationFilter('all');
+    setSelectedDistanceRanges([]);
+    setMaxDistance(25);
     setShowFilters(false);
+  };
+
+  const getLocationDisplay = (location: LocationInfo) => {
+    const icon = LOCATION_ICONS[location.locationType];
+    
+    if (location.locationType === LocationType.ON_CAMPUS) {
+      return `${icon} ${location.specificLocation}`;
+    } else {
+      const distanceIcon = location.distanceRange ? LOCATION_ICONS[location.distanceRange] : '🚗';
+      const distanceText = location.exactDistance ? 
+        `${location.exactDistance.toFixed(1)} mi` : 
+        (location.distanceRange ? DISTANCE_RANGE_LABELS[location.distanceRange] : 'Off Campus');
+      
+      return `${distanceIcon} ${location.specificLocation} (${distanceText})`;
+    }
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (selectedConditions.length > 0) count++;
+    if (selectedLocations.length > 0) count++;
+    if (priceRange[0] > 0 || priceRange[1] < 1000) count++;
+    if (locationFilter !== 'all') count++;
+    if (selectedDistanceRanges.length > 0) count++;
+    if (maxDistance < 25) count++;
+    return count;
   };
 
   return (
@@ -222,9 +332,47 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
               >
-                ⚙️ Filters {(selectedConditions.length > 0 || selectedLocations.length > 0 || priceRange[0] > 0 || priceRange[1] < 1000) && `(${selectedConditions.length + selectedLocations.length + (priceRange[0] > 0 ? 1 : 0) + (priceRange[1] < 1000 ? 1 : 0)})`}
+                ⚙️ Filters {getActiveFilterCount() > 0 && `(${getActiveFilterCount()})`}
               </Button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Location Filter Pills */}
+      <div className="bg-white border-b border-texas-gray-200 px-4 py-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-2">
+            <button
+              onClick={() => setLocationFilter('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                locationFilter === 'all'
+                  ? 'bg-texas-red text-white'
+                  : 'bg-texas-gray-100 text-texas-gray-700 hover:bg-texas-gray-200'
+              }`}
+            >
+              🌍 All Locations
+            </button>
+            <button
+              onClick={() => setLocationFilter('on_campus')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                locationFilter === 'on_campus'
+                  ? 'bg-texas-red text-white'
+                  : 'bg-texas-gray-100 text-texas-gray-700 hover:bg-texas-gray-200'
+              }`}
+            >
+              🏫 On Campus
+            </button>
+            <button
+              onClick={() => setLocationFilter('off_campus')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                locationFilter === 'off_campus'
+                  ? 'bg-texas-red text-white'
+                  : 'bg-texas-gray-100 text-texas-gray-700 hover:bg-texas-gray-200'
+              }`}
+            >
+              🏠 Off Campus
+            </button>
           </div>
         </div>
       </div>
@@ -233,7 +381,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
       {showFilters && (
         <div className="bg-white border-b border-texas-gray-200 px-4 py-6">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Price Range */}
               <div>
                 <h3 className="font-semibold text-texas-gray-900 mb-3">Price Range</h3>
@@ -263,7 +411,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
               {/* Condition */}
               <div>
                 <h3 className="font-semibold text-texas-gray-900 mb-3">Condition</h3>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-32 overflow-y-auto">
                   {conditions.map((condition) => (
                     <label key={condition} className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -284,27 +432,48 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                 </div>
               </div>
 
-              {/* Location */}
+              {/* Distance Range (for off-campus) */}
               <div>
-                <h3 className="font-semibold text-texas-gray-900 mb-3">Location</h3>
-                <div className="space-y-2">
-                  {locations.map((location) => (
-                    <label key={location} className="flex items-center gap-2 cursor-pointer">
+                <h3 className="font-semibold text-texas-gray-900 mb-3">Distance Range</h3>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {distanceRanges.map((range) => (
+                    <label key={range} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={selectedLocations.includes(location)}
+                        checked={selectedDistanceRanges.includes(range)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedLocations([...selectedLocations, location]);
+                            setSelectedDistanceRanges([...selectedDistanceRanges, range]);
                           } else {
-                            setSelectedLocations(selectedLocations.filter(l => l !== location));
+                            setSelectedDistanceRanges(selectedDistanceRanges.filter(r => r !== range));
                           }
                         }}
                         className="w-4 h-4 text-texas-red"
                       />
-                      <span className="text-sm text-texas-gray-700">{location}</span>
+                      <span className="text-sm text-texas-gray-700">
+                        {LOCATION_ICONS[range]} {DISTANCE_RANGE_LABELS[range]}
+                      </span>
                     </label>
                   ))}
+                </div>
+              </div>
+
+              {/* Max Distance */}
+              <div>
+                <h3 className="font-semibold text-texas-gray-900 mb-3">Max Distance</h3>
+                <div className="space-y-3">
+                  <Input
+                    type="range"
+                    min="1"
+                    max="25"
+                    step="1"
+                    value={maxDistance}
+                    onChange={(e) => setMaxDistance(parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-texas-gray-500 text-center">
+                    Up to {maxDistance} miles
+                  </p>
                 </div>
               </div>
             </div>
@@ -360,6 +529,11 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
           </h2>
           <p className="text-texas-gray-600">
             {filteredItems.length} items found
+            {locationFilter !== 'all' && (
+              <span className="ml-2 text-texas-red">
+                ({locationFilter === 'on_campus' ? 'On Campus' : 'Off Campus'})
+              </span>
+            )}
           </p>
         </div>
 
@@ -391,6 +565,11 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                   <div className="absolute top-3 right-3 bg-texas-red text-white px-2 py-1 rounded-full text-xs font-medium">
                     {item.condition}
                   </div>
+                  {/* Location Badge */}
+                  <div className="absolute top-3 left-3 bg-white bg-opacity-90 px-2 py-1 rounded-full text-xs font-medium text-texas-gray-800">
+                    {item.location.locationType === LocationType.ON_CAMPUS ? '🏫' : 
+                     item.location.exactDistance ? `🚗 ${item.location.exactDistance.toFixed(1)}mi` : '🏠'}
+                  </div>
                 </div>
                 <CardContent className="p-4">
                   <div className="mb-3">
@@ -421,8 +600,8 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                     </button>
                   </div>
                   
-                  <div className="flex items-center justify-between text-xs text-texas-gray-500">
-                    <span>📍 {item.location}</span>
+                  <div className="flex items-center justify-between text-xs text-texas-gray-500 mb-3">
+                    <span className="truncate">{getLocationDisplay(item.location)}</span>
                     <span>👁️ {item.views}</span>
                   </div>
                   
@@ -495,7 +674,10 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-texas-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-texas-gray-900 mb-2">📍 Location</h4>
-                  <p className="text-texas-gray-600">{selectedItem.location}</p>
+                  <p className="text-texas-gray-600">{getLocationDisplay(selectedItem.location)}</p>
+                  {selectedItem.location.address && (
+                    <p className="text-xs text-texas-gray-500 mt-1">{selectedItem.location.address}</p>
+                  )}
                 </div>
                 <div className="bg-texas-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-texas-gray-900 mb-2">👤 Seller</h4>

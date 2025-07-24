@@ -44,6 +44,30 @@ export const APP_CONSTANTS = {
     ]
   },
 
+  // Off-Campus Areas
+  OFF_CAMPUS_AREAS: {
+    NEARBY_COMPLEXES: [
+      'University Courtyard',
+      'Sterling University Trails',
+      'U Centre on Turner',
+      'Campus Lodge',
+      'Raider\'s Pass',
+      'The Edge',
+      'Gateway at Lubbock',
+      'University Pointe'
+    ],
+    NEIGHBORHOODS: [
+      'Tech Terrace',
+      'Overton',
+      'Maxey Park',
+      'Heart of Lubbock',
+      'Depot District',
+      'South Lubbock',
+      'West Lubbock',
+      'Other Area'
+    ]
+  },
+
   // Error Messages
   ERROR_MESSAGES: {
     AUTHENTICATION_ERROR: 'Authentication failed. Please check your credentials.',
@@ -57,7 +81,8 @@ export const APP_CONSTANTS = {
   SUCCESS_MESSAGES: {
     PROFILE_UPDATED: 'Profile updated successfully!',
     ACCOUNT_CREATED: 'Account created successfully!',
-    PASSWORD_RESET: 'Password reset email sent!'
+    PASSWORD_RESET: 'Password reset email sent!',
+    LOCATION_PREFERENCES_UPDATED: 'Location preferences updated successfully!'
   }
 };
 
@@ -79,4 +104,32 @@ export const CONDITION_COLORS: Record<string, string> = {
   'Good': 'bg-orange-500',
   'Fair': 'bg-yellow-500',
   'Poor': 'bg-red-500'
+};
+
+// Location Constants
+export const DISTANCE_RANGE_LABELS: Record<string, string> = {
+  'under_5': 'Under 5 miles',
+  '5_to_10': '5-10 miles',
+  '10_to_15': '10-15 miles',
+  '15_to_20': '15-20 miles',
+  '20_to_25': '20-25 miles',
+  'over_25': 'Over 25 miles'
+};
+
+export const LOCATION_ICONS: Record<string, string> = {
+  'on_campus': '🏫',
+  'off_campus': '🏠',
+  'under_5': '🚶',
+  '5_to_10': '🚲',
+  '10_to_15': '🚗',
+  '15_to_20': '🚗',
+  '20_to_25': '🚗',
+  'over_25': '✈️'
+};
+
+export const DEFAULT_LOCATION_PREFERENCES = {
+  maxDistance: 15,
+  preferOnCampus: true,
+  acceptedDistanceRanges: ['under_5', '5_to_10', '10_to_15'],
+  excludedAreas: []
 }; 
