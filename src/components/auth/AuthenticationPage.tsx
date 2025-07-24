@@ -14,7 +14,7 @@ export default function AuthenticationPage() {
       <div className="texas-gradient text-white">
         <div className="container mx-auto px-4 py-16 text-center">
           <div className="animate-fade-in">
-            <div className="text-6xl mb-4">🏛️</div>
+            <div className="text-6xl mb-4">⭐</div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Raider ReSell
             </h1>
@@ -46,10 +46,10 @@ export default function AuthenticationPage() {
       {/* Footer */}
       <div className="py-8 text-center text-texas-gray-600">
         <p className="text-sm">
-          Made with ❤️ for the Texas Tech Red Raiders community
+          Made with care for the Texas Tech Red Raiders community
         </p>
         <p className="text-xs mt-2">
-          Wreck &apos;Em Tech! 🔴⚫
+          Wreck 'Em Tech! Red & Black
         </p>
       </div>
     </div>

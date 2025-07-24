@@ -6,7 +6,7 @@ import { useChatStore } from '@/hooks/useChatStore';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { ItemCategory, CATEGORY_ICONS, CONDITION_COLORS, DISTANCE_RANGE_LABELS, LOCATION_ICONS } from '@/utils/constants';
+import { ItemCategory, CONDITION_COLORS, DISTANCE_RANGE_LABELS, LOCATION_TYPE_LABELS, TRANSPORTATION_LABELS } from '@/utils/constants';
 import { LocationType, DistanceRange, LocationInfo } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -261,17 +261,15 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
   };
 
   const getLocationDisplay = (location: LocationInfo) => {
-    const icon = LOCATION_ICONS[location.locationType];
-    
     if (location.locationType === LocationType.ON_CAMPUS) {
-      return `${icon} ${location.specificLocation}`;
+      return `${LOCATION_TYPE_LABELS[location.locationType]} - ${location.specificLocation}`;
     } else {
-      const distanceIcon = location.distanceRange ? LOCATION_ICONS[location.distanceRange] : '🚗';
       const distanceText = location.exactDistance ? 
         `${location.exactDistance.toFixed(1)} mi` : 
         (location.distanceRange ? DISTANCE_RANGE_LABELS[location.distanceRange] : 'Off Campus');
+      const transportLabel = location.distanceRange ? TRANSPORTATION_LABELS[location.distanceRange] : 'Driving';
       
-      return `${distanceIcon} ${location.specificLocation} (${distanceText})`;
+      return `${location.specificLocation} (${distanceText} - ${transportLabel})`;
     }
   };
 
@@ -294,7 +292,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-texas-gray-900">
-                Hey, {currentUser?.firstName || 'Raider'}! 👋
+                Welcome, {currentUser?.firstName || 'Raider'}!
               </h1>
               <p className="text-texas-gray-600">
                 Find great deals at Texas Tech
@@ -303,7 +301,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
             
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm">
-                🔔 Notifications
+                Notifications
               </Button>
             </div>
           </div>
@@ -325,14 +323,14 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
             </div>
             <div className="flex gap-2">
               <Button variant="primary" size="sm">
-                🔍 Search
+                Search
               </Button>
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
               >
-                ⚙️ Filters {getActiveFilterCount() > 0 && `(${getActiveFilterCount()})`}
+                Filters {getActiveFilterCount() > 0 && `(${getActiveFilterCount()})`}
               </Button>
             </div>
           </div>
@@ -351,7 +349,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                   : 'bg-texas-gray-100 text-texas-gray-700 hover:bg-texas-gray-200'
               }`}
             >
-              🌍 All Locations
+              All Locations
             </button>
             <button
               onClick={() => setLocationFilter('on_campus')}
@@ -361,7 +359,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                   : 'bg-texas-gray-100 text-texas-gray-700 hover:bg-texas-gray-200'
               }`}
             >
-              🏫 On Campus
+              On Campus
             </button>
             <button
               onClick={() => setLocationFilter('off_campus')}
@@ -371,7 +369,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                   : 'bg-texas-gray-100 text-texas-gray-700 hover:bg-texas-gray-200'
               }`}
             >
-              🏠 Off Campus
+              Off Campus
             </button>
           </div>
         </div>
@@ -451,7 +449,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                         className="w-4 h-4 text-texas-red"
                       />
                       <span className="text-sm text-texas-gray-700">
-                        {LOCATION_ICONS[range]} {DISTANCE_RANGE_LABELS[range]}
+                        {DISTANCE_RANGE_LABELS[range]}
                       </span>
                     </label>
                   ))}
@@ -502,7 +500,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                   : 'bg-texas-gray-100 text-texas-gray-700 hover:bg-texas-gray-200'
               }`}
             >
-              🏪 All
+              All Categories
             </button>
             {categories.map((category) => (
               <button
@@ -514,7 +512,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                     : 'bg-texas-gray-100 text-texas-gray-700 hover:bg-texas-gray-200'
                 }`}
               >
-                {CATEGORY_ICONS[category]} {category}
+                {category}
               </button>
             ))}
           </div>
@@ -539,7 +537,7 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
 
         {filteredItems.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
+            <div className="text-6xl mb-4 text-texas-gray-400">Search</div>
             <h3 className="text-xl font-semibold text-texas-gray-900 mb-2">
               No items found
             </h3>
@@ -567,8 +565,8 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                   </div>
                   {/* Location Badge */}
                   <div className="absolute top-3 left-3 bg-white bg-opacity-90 px-2 py-1 rounded-full text-xs font-medium text-texas-gray-800">
-                    {item.location.locationType === LocationType.ON_CAMPUS ? '🏫' : 
-                     item.location.exactDistance ? `🚗 ${item.location.exactDistance.toFixed(1)}mi` : '🏠'}
+                    {item.location.locationType === LocationType.ON_CAMPUS ? 'Campus' : 
+                     item.location.exactDistance ? `${item.location.exactDistance.toFixed(1)} mi` : 'Off Campus'}
                   </div>
                 </div>
                 <CardContent className="p-4">
@@ -593,16 +591,16 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                       )}
                     </div>
                     <button 
-                      className="text-texas-red hover:text-texas-red-600 transition-colors"
+                      className="text-texas-red hover:text-texas-red-600 transition-colors text-sm font-medium"
                       onClick={(e) => handleLikeClick(e, item.id)}
                     >
-                      ❤️ {item.likes}
+                      Like ({item.likes})
                     </button>
                   </div>
                   
                   <div className="flex items-center justify-between text-xs text-texas-gray-500 mb-3">
                     <span className="truncate">{getLocationDisplay(item.location)}</span>
-                    <span>👁️ {item.views}</span>
+                    <span>Views: {item.views}</span>
                   </div>
                   
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-texas-gray-100">
@@ -639,9 +637,9 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
               />
               <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100 transition-colors"
+                className="absolute top-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100 transition-colors text-lg font-bold"
               >
-                ✕
+                ×
               </button>
             </div>
             
@@ -673,22 +671,22 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
 
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-texas-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-texas-gray-900 mb-2">📍 Location</h4>
+                  <h4 className="font-semibold text-texas-gray-900 mb-2">Location</h4>
                   <p className="text-texas-gray-600">{getLocationDisplay(selectedItem.location)}</p>
                   {selectedItem.location.address && (
                     <p className="text-xs text-texas-gray-500 mt-1">{selectedItem.location.address}</p>
                   )}
                 </div>
                 <div className="bg-texas-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-texas-gray-900 mb-2">👤 Seller</h4>
+                  <h4 className="font-semibold text-texas-gray-900 mb-2">Seller</h4>
                   <p className="text-texas-gray-600">{selectedItem.sellerName}</p>
                 </div>
                 <div className="bg-texas-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-texas-gray-900 mb-2">👁️ Views</h4>
+                  <h4 className="font-semibold text-texas-gray-900 mb-2">Views</h4>
                   <p className="text-texas-gray-600">{selectedItem.views}</p>
                 </div>
                 <div className="bg-texas-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-texas-gray-900 mb-2">❤️ Likes</h4>
+                  <h4 className="font-semibold text-texas-gray-900 mb-2">Likes</h4>
                   <p className="text-texas-gray-600">{selectedItem.likes}</p>
                 </div>
               </div>
@@ -700,19 +698,19 @@ export default function MarketplaceView({ onNavigateToChat }: MarketplaceViewPro
                   onClick={() => handleContactSeller(selectedItem)}
                   disabled={contactingseller}
                 >
-                  {contactingseller ? '💬 Starting Chat...' : '💬 Contact Seller'}
+                  {contactingseller ? 'Starting Chat...' : 'Contact Seller'}
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={(e) => handleLikeClick(e, selectedItem.id)}
                 >
-                  ❤️ Like
+                  Like
                 </Button>
               </div>
 
               {selectedItem.sellerId === (currentUser?.id || 'current-user') && (
                 <p className="text-center text-xs text-texas-gray-500 mt-4">
-                  ℹ️ This is your own listing
+                  This is your own listing
                 </p>
               )}
             </div>

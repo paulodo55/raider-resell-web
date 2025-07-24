@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { LocationPreferences, DistanceRange } from '@/types';
-import { DISTANCE_RANGE_LABELS, LOCATION_ICONS, DEFAULT_LOCATION_PREFERENCES, APP_CONSTANTS } from '@/utils/constants';
+import { DISTANCE_RANGE_LABELS, TRANSPORTATION_LABELS, DEFAULT_LOCATION_PREFERENCES, APP_CONSTANTS } from '@/utils/constants';
 import toast from 'react-hot-toast';
 
 interface LocationPreferencesProps {
@@ -106,13 +106,13 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
         <div className="sticky top-0 bg-white border-b border-texas-gray-200 p-6 rounded-t-xl">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-texas-gray-900">
-              📍 Location Preferences
+              Location Preferences
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-texas-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-texas-gray-100 rounded-full transition-colors text-lg font-bold"
             >
-              ✕
+              ×
             </button>
           </div>
           <p className="text-texas-gray-600 mt-2">
@@ -125,7 +125,7 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
           <Card>
             <CardHeader>
               <h3 className="text-lg font-semibold text-texas-gray-900">
-                🏫 Campus Preference
+                Campus Preference
               </h3>
             </CardHeader>
             <CardContent>
@@ -157,7 +157,7 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
           <Card>
             <CardHeader>
               <h3 className="text-lg font-semibold text-texas-gray-900">
-                🚗 Maximum Distance
+                Maximum Distance
               </h3>
             </CardHeader>
             <CardContent>
@@ -195,7 +195,7 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
           <Card>
             <CardHeader>
               <h3 className="text-lg font-semibold text-texas-gray-900">
-                📏 Accepted Distance Ranges
+                Accepted Distance Ranges
               </h3>
               <p className="text-sm text-texas-gray-600">
                 Select which distance ranges you're comfortable with for off-campus items
@@ -215,14 +215,14 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
                           : 'border-texas-gray-200 bg-white text-texas-gray-700 hover:border-texas-red-300'
                       }`}
                     >
-                      <span className="text-xl">
-                        {LOCATION_ICONS[range]}
+                      <span className="text-sm font-medium">
+                        {TRANSPORTATION_LABELS[range]}
                       </span>
                       <span className="font-medium">
                         {DISTANCE_RANGE_LABELS[range]}
                       </span>
                       {isSelected && (
-                        <span className="ml-auto text-texas-red">✓</span>
+                        <span className="ml-auto text-texas-red font-bold">✓</span>
                       )}
                     </button>
                   );
@@ -230,7 +230,7 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
               </div>
               {preferences.acceptedDistanceRanges.length === 0 && (
                 <p className="text-sm text-orange-600 mt-3 p-3 bg-orange-50 rounded-lg">
-                  ⚠️ No distance ranges selected. You'll only see on-campus items.
+                  Warning: No distance ranges selected. You'll only see on-campus items.
                 </p>
               )}
             </CardContent>
@@ -240,7 +240,7 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
           <Card>
             <CardHeader>
               <h3 className="text-lg font-semibold text-texas-gray-900">
-                🚫 Excluded Areas
+                Excluded Areas
               </h3>
               <p className="text-sm text-texas-gray-600">
                 Hide items from specific areas you want to avoid
@@ -291,7 +291,7 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
                 {preferences.excludedAreas && preferences.excludedAreas.length > 0 && (
                   <div className="p-3 bg-red-50 rounded-lg">
                     <p className="text-sm text-red-700">
-                      🚫 Excluding {preferences.excludedAreas.length} area(s) from your search results
+                      Excluding {preferences.excludedAreas.length} area(s) from your search results
                     </p>
                   </div>
                 )}
@@ -303,18 +303,18 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
           <Card variant="outlined">
             <CardHeader>
               <h3 className="text-lg font-semibold text-texas-gray-900">
-                📋 Preferences Summary
+                Preferences Summary
               </h3>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm text-texas-gray-700">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Campus preference:</span>
-                  <span>{preferences.preferOnCampus ? '🏫 Prefer on-campus' : '🌍 No preference'}</span>
+                  <span>{preferences.preferOnCampus ? 'Prefer on-campus' : 'No preference'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Maximum distance:</span>
-                  <span>🚗 {preferences.maxDistance} miles</span>
+                  <span>{preferences.maxDistance} miles</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Accepted ranges:</span>
@@ -347,7 +347,7 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
               variant="outline"
               className="flex-1"
             >
-              🔄 Reset to Defaults
+              Reset to Defaults
             </Button>
             <Button
               onClick={onClose}
@@ -362,7 +362,7 @@ export default function LocationPreferencesModal({ onClose }: LocationPreference
               disabled={saving}
               className="flex-1"
             >
-              {saving ? '💾 Saving...' : '💾 Save Preferences'}
+              {saving ? 'Saving...' : 'Save Preferences'}
             </Button>
           </div>
         </div>

@@ -270,7 +270,7 @@ export default function ChatView() {
         <div className="bg-white border-b border-texas-gray-200 px-4 py-6">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-2xl font-bold text-texas-gray-900">
-              Messages 💬
+              Messages
             </h1>
             <p className="text-texas-gray-600">
               Chat with buyers and sellers
@@ -282,7 +282,7 @@ export default function ChatView() {
         <div className="max-w-4xl mx-auto px-4 py-8">
           {chats.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">💬</div>
+              <div className="text-6xl mb-4 text-texas-gray-400">Chat</div>
               <h3 className="text-xl font-semibold text-texas-gray-900 mb-2">
                 No conversations yet
               </h3>
@@ -358,7 +358,7 @@ export default function ChatView() {
             size="sm"
             onClick={() => setSelectedChat(null)}
           >
-            ← Back
+            Back
           </Button>
           
           <img
@@ -401,9 +401,9 @@ export default function ChatView() {
                     <span>{formatTime(message.createdAt)}</span>
                     {isCurrentUser && (
                       <span>
-                        {message.status === MessageStatus.SENT && '📤'}
-                        {message.status === MessageStatus.DELIVERED && '✓'}
-                        {message.status === MessageStatus.READ && '✓✓'}
+                        {message.status === MessageStatus.SENT && 'Sent'}
+                        {message.status === MessageStatus.DELIVERED && 'Delivered'}
+                        {message.status === MessageStatus.READ && 'Read'}
                       </span>
                     )}
                   </div>

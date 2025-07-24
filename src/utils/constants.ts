@@ -86,18 +86,6 @@ export const APP_CONSTANTS = {
   }
 };
 
-export const CATEGORY_ICONS: Record<string, string> = {
-  'Textbooks': '📚',
-  'Electronics': '📱',
-  'Clothing': '👕',
-  'Furniture': '🛏️',
-  'Sports & Recreation': '⚽',
-  'Tickets': '🎫',
-  'Dorm Supplies': '🏠',
-  'Tech Gear': '💻',
-  'Other': '📦'
-};
-
 export const CONDITION_COLORS: Record<string, string> = {
   'New': 'bg-green-500',
   'Like New': 'bg-blue-500',
@@ -116,15 +104,18 @@ export const DISTANCE_RANGE_LABELS: Record<string, string> = {
   'over_25': 'Over 25 miles'
 };
 
-export const LOCATION_ICONS: Record<string, string> = {
-  'on_campus': '🏫',
-  'off_campus': '🏠',
-  'under_5': '🚶',
-  '5_to_10': '🚲',
-  '10_to_15': '🚗',
-  '15_to_20': '🚗',
-  '20_to_25': '🚗',
-  'over_25': '✈️'
+export const LOCATION_TYPE_LABELS: Record<string, string> = {
+  'on_campus': 'On Campus',
+  'off_campus': 'Off Campus'
+};
+
+export const TRANSPORTATION_LABELS: Record<string, string> = {
+  'under_5': 'Walking',
+  '5_to_10': 'Biking',
+  '10_to_15': 'Driving',
+  '15_to_20': 'Driving',
+  '20_to_25': 'Driving',
+  'over_25': 'Extended Drive'
 };
 
 export const DEFAULT_LOCATION_PREFERENCES = {

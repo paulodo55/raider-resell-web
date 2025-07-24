@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import LocationPreferencesModal from '../profile/LocationPreferences';
-import { DISTANCE_RANGE_LABELS, LOCATION_ICONS } from '@/utils/constants';
+import { DISTANCE_RANGE_LABELS, TRANSPORTATION_LABELS } from '@/utils/constants';
 
 export default function ProfileView() {
   const { currentUser, signOut } = useAuth();
@@ -16,13 +16,13 @@ export default function ProfileView() {
     if (!prefs) return 'Not set';
 
     const parts = [];
-    if (prefs.preferOnCampus) parts.push('🏫 Prefers on-campus');
-    parts.push(`🚗 Max ${prefs.maxDistance} miles`);
+    if (prefs.preferOnCampus) parts.push('Prefers on-campus');
+    parts.push(`Max ${prefs.maxDistance} miles`);
     if (prefs.acceptedDistanceRanges.length > 0) {
-      parts.push(`📏 ${prefs.acceptedDistanceRanges.length} range(s)`);
+      parts.push(`${prefs.acceptedDistanceRanges.length} range(s)`);
     }
     if (prefs.excludedAreas && prefs.excludedAreas.length > 0) {
-      parts.push(`🚫 ${prefs.excludedAreas.length} excluded area(s)`);
+      parts.push(`${prefs.excludedAreas.length} excluded area(s)`);
     }
 
     return parts.join(', ');
@@ -35,7 +35,11 @@ export default function ProfileView() {
         <Card variant="elevated" className="mb-8">
           <CardContent className="p-8">
             <div className="text-center mb-8">
-              <div className="text-6xl mb-4">👤</div>
+              <div className="w-24 h-24 bg-texas-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl font-bold text-texas-red">
+                  {currentUser?.firstName?.charAt(0) || 'U'}
+                </span>
+              </div>
               <h2 className="text-2xl font-bold text-texas-gray-900 mb-2">
                 {currentUser?.firstName} {currentUser?.lastName}
               </h2>
@@ -43,7 +47,7 @@ export default function ProfileView() {
                 {currentUser?.email}
               </p>
               <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm bg-texas-red-50 text-texas-red">
-                🎓 Class of {currentUser?.graduationYear}
+                Class of {currentUser?.graduationYear}
               </div>
             </div>
             
@@ -76,17 +80,17 @@ export default function ProfileView() {
                 className="flex-1"
                 onClick={() => setShowLocationPreferences(true)}
               >
-                📍 Location Preferences
+                Location Preferences
               </Button>
               <Button variant="outline" className="flex-1">
-                ⚙️ Account Settings
+                Account Settings
               </Button>
               <Button 
                 variant="outline" 
                 onClick={signOut}
                 className="flex-1 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
               >
-                🚪 Sign Out
+                Sign Out
               </Button>
             </div>
           </CardContent>
@@ -98,7 +102,7 @@ export default function ProfileView() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-texas-gray-900 mb-2">
-                  📍 Location Preferences
+                  Location Preferences
                 </h3>
                 <p className="text-sm text-texas-gray-600 mb-4">
                   {getLocationPreferencesSummary()}
@@ -108,23 +112,23 @@ export default function ProfileView() {
                   <div className="space-y-2 text-xs text-texas-gray-500">
                     {currentUser.locationPreferences.preferOnCampus && (
                       <div className="flex items-center gap-2">
-                        <span>🏫</span>
+                        <span className="font-medium">Campus:</span>
                         <span>Prefers on-campus items</span>
                       </div>
                     )}
                     
                     {currentUser.locationPreferences.acceptedDistanceRanges.length > 0 && (
                       <div className="flex items-start gap-2">
-                        <span>📏</span>
+                        <span className="font-medium">Ranges:</span>
                         <div>
-                          <span>Accepted ranges: </span>
+                          <span>Accepted distances: </span>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {currentUser.locationPreferences.acceptedDistanceRanges.map((range) => (
                               <span 
                                 key={range}
                                 className="inline-flex items-center gap-1 px-2 py-1 bg-texas-gray-100 rounded text-xs"
                               >
-                                {LOCATION_ICONS[range]} {DISTANCE_RANGE_LABELS[range]}
+                                {DISTANCE_RANGE_LABELS[range]}
                               </span>
                             ))}
                           </div>
@@ -135,9 +139,9 @@ export default function ProfileView() {
                     {currentUser.locationPreferences.excludedAreas && 
                      currentUser.locationPreferences.excludedAreas.length > 0 && (
                       <div className="flex items-start gap-2">
-                        <span>🚫</span>
+                        <span className="font-medium">Excluded:</span>
                         <div>
-                          <span>Excluded areas: </span>
+                          <span>Areas: </span>
                           <span>{currentUser.locationPreferences.excludedAreas.join(', ')}</span>
                         </div>
                       </div>
@@ -161,7 +165,7 @@ export default function ProfileView() {
         <Card variant="outlined">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-texas-gray-900 mb-4">
-              📋 Account Information
+              Account Information
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

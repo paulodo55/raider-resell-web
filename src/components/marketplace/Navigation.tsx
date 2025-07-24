@@ -10,20 +10,20 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
     {
       id: 'marketplace' as const,
       label: 'Marketplace',
-      icon: '🏪',
-      activeIcon: '🏪'
+      icon: 'Store',
+      activeIcon: 'Store'
     },
     {
       id: 'chats' as const,
       label: 'Chats',
-      icon: '💬',
-      activeIcon: '💬'
+      icon: 'Chat',
+      activeIcon: 'Chat'
     },
     {
       id: 'profile' as const,
       label: 'Profile',
-      icon: '👤',
-      activeIcon: '👤'
+      icon: 'User',
+      activeIcon: 'User'
     }
   ];
 
@@ -42,7 +42,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
                   : 'text-texas-gray-600 hover:text-texas-red'
               }`}
             >
-              <span className="text-2xl mb-1">
+              <span className="text-lg mb-1 font-semibold">
                 {activeTab === tab.id ? tab.activeIcon : tab.icon}
               </span>
               <span>{tab.label}</span>
@@ -55,7 +55,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
       <div className="hidden md:fixed md:top-0 md:left-0 md:h-full md:w-64 md:bg-white md:border-r md:border-texas-gray-200 md:flex md:flex-col">
         <div className="p-6">
           <div className="flex items-center">
-            <span className="text-3xl">🏛️</span>
+            <span className="text-3xl">⭐</span>
             <div className="ml-3">
               <h1 className="text-xl font-bold texas-text-gradient">
                 Raider ReSell
@@ -78,7 +78,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
                   : 'text-texas-gray-700 hover:bg-texas-gray-100 hover:text-texas-red'
               }`}
             >
-              <span className="text-xl mr-3">
+              <span className="text-lg mr-3 font-semibold">
                 {activeTab === tab.id ? tab.activeIcon : tab.icon}
               </span>
               {tab.label}
@@ -90,12 +90,12 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
           <div className="text-center mb-4">
             <div className="inline-flex items-center px-3 py-2 bg-texas-red-50 rounded-full">
               <span className="text-texas-red text-sm font-medium">
-                ✨ New: Real-time Chat System!
+                New: Real-time Chat System!
               </span>
             </div>
           </div>
           <p className="text-xs text-texas-gray-500 text-center">
-            Wreck &apos;Em Tech! 🔴⚫
+            Wreck 'Em Tech! Red & Black
           </p>
         </div>
       </div>
